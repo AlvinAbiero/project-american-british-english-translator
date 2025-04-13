@@ -5,72 +5,28 @@ const britishOnly = require("./british-only.js");
 
 class Translator {
   translate(text, locale) {
-    if (!text || !locale) {
-      return { error: "Required field(s) missing" };
-    }
-
-    if (text.trim() === "") {
-      return { error: "No text to translate" };
-    }
+    if (!text) return { error: "No text to translate" };
+    if (!locale) return { error: "Required field(s) missing" };
 
     if (locale !== "american-to-british" && locale !== "british-to-american") {
       return { error: "Invalid value for locale field" };
     }
 
-    //   Make a copy of the original text for comparison later
+    // Make a copy of the original text for comparison later
     let translatedText = text;
     let translations = [];
-    const highlightStart = '<span class="highlight">';
-    const highlightEnd = "</span>";
 
-    //   Handle different dictionary and formatting based on direction
+    // Handle different dictionary and formatting based on direction
     if (locale === "american-to-british") {
-      //   Process American to British translations
-
-      //   Handle American-only terms
-      for (const [american, british] of Object.entries(americanOnly)) {
-        const regex = new RegExp(`\\b${american}\\b`, "i");
-        if (regex.test(translatedText)) {
-          const match = translatedText.match(regex)[0];
-          const replacement = british;
-          translations.push({ original: match, translated: replacement });
-          translatedText = translatedText.replace(
-            regex,
-            `${highlightStart}${replacement}${highlightEnd}`
-          );
-        }
-      }
-
-      //   Handle American to British spelling
-      for (const [american, british] of Object.entries(
-        americanToBritishSpelling
-      )) {
-        const regex = new RegExp(`\\b${american}\\b`, "i");
-        if (regex.test(translatedText)) {
-          const match = translatedText.match(regex)[0];
-          //   preserve the case of the original word
-          let replacement = british;
-          if (match === match.toUppercase()) {
-            replacement = replacement.toUpperCase();
-          } else if (match[0] === match[0].toUpperCase()) {
-            replacement =
-              replacement.charAt(0).toUpperCase() + replacement.slice(1);
-          }
-
-          translations.push({ original: match, translated: replacement });
-          translatedText = translatedText.replace(
-            regex,
-            `${highlightStart}${replacement}${highlightEnd}`
-          );
-        }
-      }
+      // Process American to British translations
 
       // Handle titles
       for (const [american, british] of Object.entries(
         americanToBritishTitles
       )) {
         // Make sure to escape the period in titles
-        const regex = new RegExp(`\\b${american.replace(".", "\\.")}\\b`, "i");
+        // const regex = new RegExp(`\\b${american.replace(".", "\\.")}\\b`, "i");
+        const regex = new RegExp(`\\b${american}(?=\\s|\\b)`, "gi");
         if (regex.test(translatedText)) {
           const match = translatedText.match(regex)[0];
           // Preserve the case of the original title
@@ -85,7 +41,45 @@ class Translator {
           translations.push({ original: match, translated: replacement });
           translatedText = translatedText.replace(
             regex,
-            `${highlightStart}${replacement}${highlightEnd}`
+            `<span class="highlight">${replacement}</span>`
+          );
+        }
+      }
+
+      // Handle American-only terms
+      for (const [american, british] of Object.entries(americanOnly)) {
+        const regex = new RegExp(`\\b${american}\\b`, "i");
+        if (regex.test(translatedText)) {
+          const match = translatedText.match(regex)[0];
+          const replacement = british;
+          translations.push({ original: match, translated: replacement });
+          translatedText = translatedText.replace(
+            regex,
+            `<span class="highlight">${replacement}</span>`
+          );
+        }
+      }
+
+      // Handle American to British spelling
+      for (const [american, british] of Object.entries(
+        americanToBritishSpelling
+      )) {
+        const regex = new RegExp(`\\b${american}\\b`, "i");
+        if (regex.test(translatedText)) {
+          const match = translatedText.match(regex)[0];
+          // Preserve the case of the original word
+          let replacement = british;
+          if (match === match.toUpperCase()) {
+            replacement = replacement.toUpperCase();
+          } else if (match[0] === match[0].toUpperCase()) {
+            replacement =
+              replacement.charAt(0).toUpperCase() + replacement.slice(1);
+          }
+
+          translations.push({ original: match, translated: replacement });
+          translatedText = translatedText.replace(
+            regex,
+            `<span class="highlight">${replacement}</span>`
           );
         }
       }
@@ -99,7 +93,7 @@ class Translator {
         translations.push({ original: americanTime, translated: britishTime });
         translatedText = translatedText.replace(
           americanTime,
-          `${highlightStart}${britishTime}${highlightEnd}`
+          `<span class="highlight">${britishTime}</span>`
         );
       }
     } else {
@@ -114,7 +108,7 @@ class Translator {
           translations.push({ original: match, translated: replacement });
           translatedText = translatedText.replace(
             regex,
-            `${highlightStart}${replacement}${highlightEnd}`
+            `<span class="highlight">${replacement}</span>`
           );
         }
       }
@@ -138,7 +132,7 @@ class Translator {
           translations.push({ original: match, translated: replacement });
           translatedText = translatedText.replace(
             regex,
-            `${highlightStart}${replacement}${highlightEnd}`
+            `<span class="highlight">${replacement}</span>`
           );
         }
       }
@@ -162,7 +156,7 @@ class Translator {
           translations.push({ original: match, translated: replacement });
           translatedText = translatedText.replace(
             regex,
-            `${highlightStart}${replacement}${highlightEnd}`
+            `<span class="highlight">${replacement}</span>`
           );
         }
       }
@@ -176,7 +170,7 @@ class Translator {
         translations.push({ original: britishTime, translated: americanTime });
         translatedText = translatedText.replace(
           britishTime,
-          `${highlightStart}${americanTime}${highlightEnd}`
+          `<span class="highlight">${americanTime}</span>`
         );
       }
     }
@@ -191,7 +185,7 @@ class Translator {
 
     return {
       text,
-      translations: translatedText,
+      translation: translatedText,
     };
   }
 }
